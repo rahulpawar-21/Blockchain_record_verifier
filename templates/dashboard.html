@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RecordChain | Dashboard</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<header class="topbar"><div class="brand"><span class="brand-mark">R</span> RecordChain</div><nav><a class="active" href="{{ url_for('dashboard') }}">Dashboard</a><a href="{{ url_for('blockchain_page') }}">Blockchain</a><a href="{{ url_for('verify_page') }}">Public Verify</a><a href="{{ url_for('logout') }}">Logout</a></nav></header>
+<main class="container">
+<section class="hero"><div><span class="eyebrow">Academic integrity platform</span><h1>RecordChain Dashboard</h1><p>Create verified records, preserve corrections, and demonstrate tamper detection.</p></div><div class="status {{ 'valid' if valid else 'invalid' }}">{{ '● Blockchain Valid' if valid else '● Tampering Detected' }}</div></section>
+<section class="stats"><div class="stat"><span>Total records</span><strong>{{ records|length }}</strong><small>Academic records</small></div><div class="stat"><span>Blocks</span><strong>{{ chain|length }}</strong><small>Including genesis block</small></div><div class="stat"><span>Integrity</span><strong>{{ '100%' if valid else 'ALERT' }}</strong><small>{{ 'All links verified' if valid else 'Review required' }}</small></div></section>
+<section class="grid two">
+<div class="panel"><div class="panel-head"><div><span class="eyebrow">Step 1</span><h2>Add a new record</h2></div><span class="badge">SHA-256</span></div>
+<form id="record-form" class="form-grid">
+<label>Certificate ID<input name="certificate_id" placeholder="CERT001" required></label>
+<label>Student Name<input name="student_name" placeholder="Mahendra MN" required></label>
+<label>SRN<input name="srn" placeholder="R25EJ064" required></label>
+<label>Course<input name="course" value="BCA" required></label>
+<label>Subject<input name="subject" placeholder="Python" required></label>
+<label>Marks<input name="marks" type="number" min="0" max="100" placeholder="85" required></label>
+<button class="primary" type="submit">Create Block →</button>
+</form><div id="form-message"></div></div>
+<div class="panel demo-panel"><div class="panel-head"><div><span class="eyebrow">Step 3</span><h2>Tamper simulation</h2></div><span class="badge danger-badge">DEMO ONLY</span></div>
+<p class="muted">Intentionally changes historical data without resealing its hash. The validator should catch the mismatch.</p>
+<label>Target block<select id="tamper-block">{% for block in chain if block.index != 0 %}<option value="{{ block.index }}">Block {{ block.index }} · {{ block.record.get('student_name','') }}</option>{% endfor %}</select></label>
+<label>New marks<input id="tamper-marks" type="number" min="0" max="100" value="99"></label>
+<div class="button-row"><button class="danger" id="tamper-btn">Simulate Hacker Attack</button><button class="secondary" id="reset-btn">Reset Demo</button></div><div id="tamper-message"></div></div>
+</section>
+<section class="panel correction-panel"><div class="panel-head"><div><span class="eyebrow">Step 2</span><h2>Record an official correction</h2></div><span class="badge">Preserves history</span></div><p class="muted">A legitimate correction never edits the old block. It creates a new correction block linked to the chain.</p>
+<form id="correction-form" class="form-grid"><label>Certificate ID<select name="certificate_id" id="correction-certificate">{% for r in records %}<option value="{{ r.certificate_id }}">{{ r.certificate_id }} · {{ r.student_name }} · {{ r.marks }} marks</option>{% endfor %}</select></label><label>Correct marks<input name="marks" type="number" min="0" max="100" required></label><label class="wide">Reason<input name="reason" value="Official correction"></label><button class="primary" type="submit">Create Correction Block →</button></form><div id="correction-message"></div></section>
+<section class="panel"><div class="panel-head"><div><span class="eyebrow">Records</span><h2>Recent records</h2></div><a class="secondary-button" href="{{ url_for('blockchain_page') }}">Explore chain →</a></div>
+<div class="table-wrap"><table><thead><tr><th>Certificate</th><th>Student</th><th>Subject</th><th>Marks</th><th>Block</th><th>Verify</th></tr></thead><tbody>{% for r in records %}<tr><td><strong>{{ r.certificate_id }}</strong></td><td>{{ r.student_name }}</td><td>{{ r.subject }}</td><td>{{ r.marks }}</td><td>#{{ r.block_index }}</td><td><a href="{{ url_for('verify_page') }}?certificate={{ r.certificate_id }}" class="table-link">Verify</a></td></tr>{% else %}<tr><td colspan="6" class="muted center">No records yet.</td></tr>{% endfor %}</tbody></table></div></section>
+{% if errors %}<section class="panel"><h2>Validation Errors</h2><pre class="error-box">{{ errors|tojson(indent=2) }}</pre></section>{% endif %}
+</main><script src="{{ url_for('static', filename='js/dashboard.js') }}"></script></body></html>
